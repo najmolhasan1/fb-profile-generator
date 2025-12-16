@@ -44,7 +44,6 @@
         h1 {
             font-size: 2.8rem;
             margin-bottom: 10px;
-            /* text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); */
         }
         
         .subtitle {
@@ -177,6 +176,7 @@
             object-fit: cover;
             z-index: 1;
             border-radius: 0;
+            transition: transform 0.3s ease;
         }
         
         #frameOverlay {
@@ -314,6 +314,7 @@
             gap: 10px;
             margin-top: 15px;
             justify-content: center;
+            flex-wrap: wrap;
         }
         
         .control-btn {
@@ -323,10 +324,44 @@
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 0.9rem;
         }
         
         .control-btn:hover {
             background: #d8dadf;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 5px;
+            margin: 5px;
+        }
+        
+        .zoom-level {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .download-status {
+            margin-top: 10px;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .download-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .download-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -334,7 +369,6 @@
     <div class="container">
         <header>
             <h1><i class="fab fa-facebook-square"></i> প্রোফাইল তৈরী করুন</h1>
-            <!-- <p class="subtitle">আপলোড করুন আপনার ছবি, জুন ইন বা আউট করে এডজাস্ট করুন এবং ডাউনলোড করুন!</p> -->
         </header>
         
         <div class="main-content">
@@ -370,27 +404,42 @@
                 </div>
                 
                 <div class="preview-controls">
-                    <button id="zoomInBtn" class="control-btn" title="Zoom In">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
-                    <button id="zoomOutBtn" class="control-btn" title="Zoom Out">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
-                    <button id="resetZoomBtn" class="control-btn" title="Reset Zoom">
-                        <i class="fas fa-redo"></i>
-                    </button>
-                    <button id="moveUpBtn" class="control-btn" title="Move Up">
-                        <i class="fas fa-arrow-up"></i>
-                    </button>
-                    <button id="moveDownBtn" class="control-btn" title="Move Down">
-                        <i class="fas fa-arrow-down"></i>
-                    </button>
-                    <button id="moveLeftBtn" class="control-btn" title="Move Left">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <button id="moveRightBtn" class="control-btn" title="Move Right">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
+                    <div class="control-group">
+                        <button id="zoomInBtn" class="control-btn" title="Zoom In">
+                            <i class="fas fa-search-plus"></i> জুম ইন
+                        </button>
+                        <button id="zoomOutBtn" class="control-btn" title="Zoom Out">
+                            <i class="fas fa-search-minus"></i> জুম আউট
+                        </button>
+                        <button id="resetZoomBtn" class="control-btn" title="Reset Zoom">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <button id="moveUpBtn" class="control-btn" title="Move Up">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button id="moveDownBtn" class="control-btn" title="Move Down">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <button id="moveLeftBtn" class="control-btn" title="Move Left">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <button id="moveRightBtn" class="control-btn" title="Move Right">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="zoom-level">
+                    জুম লেভেল: <span id="zoomLevel">100%</span> | 
+                    পজিশন: X: <span id="posXValue">0</span>, Y: <span id="posYValue">0</span>
+                </div>
+                
+                <div id="downloadStatus" class="download-status">
+                    <i class="fas fa-check-circle"></i> <span id="statusMessage">ছবি ডাউনলোড শুরু হয়েছে!</span>
                 </div>
                 
                 <button id="downloadBtn" class="download-btn" disabled>
@@ -420,7 +469,7 @@
                 <div class="step">
                     <i class="fas fa-download"></i>
                     <h4>৪. ডাউনলোড করুন</h4>
-                    <p>1080x1080 HD সাইজে ডাউনলোড করুন</p>
+                    <p>HD সাইজে সম্পূর্ণ কভার করে ডাউনলোড করুন</p>
                 </div>
             </div>
         </div>
@@ -439,6 +488,11 @@
         const framePreviewImg = document.getElementById('framePreviewImg');
         const defaultPreview = document.getElementById('defaultPreview');
         const downloadBtn = document.getElementById('downloadBtn');
+        const zoomLevel = document.getElementById('zoomLevel');
+        const posXValue = document.getElementById('posXValue');
+        const posYValue = document.getElementById('posYValue');
+        const downloadStatus = document.getElementById('downloadStatus');
+        const statusMessage = document.getElementById('statusMessage');
         
         // Control buttons
         const zoomInBtn = document.getElementById('zoomInBtn');
@@ -449,18 +503,18 @@
         const moveLeftBtn = document.getElementById('moveLeftBtn');
         const moveRightBtn = document.getElementById('moveRightBtn');
         
-        // Frame settings - IMPORTANT: Replace this with your frame image
-        // Option 1: Use your local frame image (if in same folder as HTML file)
-        const frameImageURL = 'frame final.png'; // আপনার ফ্রেম ফাইলটি HTML ফাইলের同一个 ফোল্ডারে রাখুন
-        
-        // Option 2: Use an online URL if you host the frame image
-        // const frameImageURL = 'https://yourwebsite.com/frame-final.png';
+        // Frame settings
+        const frameImageURL = 'frame final.png';
         
         // Image transformation state
         let scale = 1;
         let posX = 0;
         let posY = 0;
         let uploadedImage = null;
+        
+        // Store original image dimensions
+        let originalImageWidth = 0;
+        let originalImageHeight = 0;
         
         // Load the frame image
         frameOverlay.src = frameImageURL;
@@ -554,6 +608,10 @@
             reader.onload = function(e) {
                 uploadedImage = new Image();
                 uploadedImage.onload = function() {
+                    // Store original dimensions
+                    originalImageWidth = uploadedImage.width;
+                    originalImageHeight = uploadedImage.height;
+                    
                     // Show the uploaded image and hide default preview
                     previewImage.src = e.target.result;
                     previewImage.classList.remove('hidden');
@@ -572,7 +630,7 @@
                     uploadArea.innerHTML = `
                         <i class="fas fa-check-circle" style="color: #42b72a;"></i>
                         <p>ছবি আপলোড সফল হয়েছে!</p>
-                        <span>${file.name}</span>
+                        <span>${file.name} (${originalImageWidth}×${originalImageHeight})</span>
                         <br><br>
                         <small>জুম ইন/আউট এবং পজিশন ঠিক করুন</small>
                     `;
@@ -588,15 +646,36 @@
             
             // Update the preview image with transformations
             previewImage.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+            
+            // Update zoom and position indicators
+            zoomLevel.textContent = `${Math.round(scale * 100)}%`;
+            posXValue.textContent = posX;
+            posYValue.textContent = posY;
+        }
+        
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            downloadStatus.className = isError ? 'download-status download-error' : 'download-status download-success';
+            downloadStatus.style.display = 'block';
+            
+            // Hide status after 3 seconds
+            setTimeout(() => {
+                downloadStatus.style.display = 'none';
+            }, 3000);
         }
         
         function downloadProfilePicture() {
             if (!uploadedImage) return;
             
-            // Create a canvas element with 1080x1080 size
+            // Show loading state
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> প্রস্তুত হচ্ছে...';
+            downloadBtn.disabled = true;
+            
+            // Create a canvas element with 2048x2048 size
             const canvas = document.createElement('canvas');
-            canvas.width = 1080;
-            canvas.height = 1080;
+            canvas.width = 2048;
+            canvas.height = 2048;
             const ctx = canvas.getContext('2d');
             
             // Create temporary image for frame
@@ -604,72 +683,167 @@
             frameImg.crossOrigin = "anonymous";
             
             frameImg.onload = function() {
-                // Fill background with white
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, 1080, 1080);
-                
-                // Calculate image position and scale for 1080x1080
-                const containerSize = 1080;
-                const imgWidth = uploadedImage.width * scale;
-                const imgHeight = uploadedImage.height * scale;
-                
-                // Calculate position (centered + user adjustment)
-                const centerX = containerSize / 2 - imgWidth / 2 + (posX * (1080/400));
-                const centerY = containerSize / 2 - imgHeight / 2 + (posY * (1080/400));
-                
-                // Draw user image
-                ctx.drawImage(uploadedImage, centerX, centerY, imgWidth, imgHeight);
-                
-                // Draw frame overlay
-                ctx.drawImage(frameImg, 0, 0, 1080, 1080);
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.download = `profile-picture-${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                
-                // Show success message
-                alert('ছবি ডাউনলোড শুরু হয়েছে! সাইজ: 1080x1080 পিক্সেল');
+                try {
+                    // Fill background with white
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 2048, 2048);
+                    
+                    // Calculate aspect ratios
+                    const canvasAspect = 2048 / 2048;
+                    const imageAspect = originalImageWidth / originalImageHeight;
+                    
+                    let drawWidth, drawHeight, offsetX, offsetY;
+                    
+                    // Calculate dimensions for "cover" effect
+                    if (imageAspect > canvasAspect) {
+                        // Image is wider than canvas
+                        drawHeight = 2048;
+                        drawWidth = originalImageWidth * (2048 / originalImageHeight);
+                    } else {
+                        // Image is taller than canvas
+                        drawWidth = 2048;
+                        drawHeight = originalImageHeight * (2048 / originalImageWidth);
+                    }
+                    
+                    // Apply user's zoom level
+                    drawWidth *= scale;
+                    drawHeight *= scale;
+                    
+                    // Calculate offset to center the image
+                    offsetX = (2048 - drawWidth) / 2;
+                    offsetY = (2048 - drawHeight) / 2;
+                    
+                    // Apply user's position adjustments
+                    const positionScale = 2048 / 400;
+                    offsetX += posX * positionScale;
+                    offsetY += posY * positionScale;
+                    
+                    // Draw the user's image with "cover" effect
+                    ctx.drawImage(uploadedImage, offsetX, offsetY, drawWidth, drawHeight);
+                    
+                    // Draw frame overlay on top
+                    ctx.drawImage(frameImg, 0, 0, 2048, 2048);
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    const timestamp = new Date().getTime();
+                    link.download = `profile-picture-${timestamp}.png`;
+                    
+                    // Convert canvas to data URL
+                    const dataURL = canvas.toDataURL('image/png');
+                    link.href = dataURL;
+                    
+                    // Create a click event and trigger it
+                    const clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    
+                    // Trigger the download
+                    link.dispatchEvent(clickEvent);
+                    
+                    // Show success message without console
+                    showStatus('ছবি ডাউনলোড হচ্ছে!');
+                    
+                    // Reset button after a delay
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = originalText;
+                        downloadBtn.disabled = false;
+                    }, 1500);
+                    
+                } catch (error) {
+                    // Show error message
+                    showStatus('ডাউনলোডে সমস্যা হয়েছে! আবার চেষ্টা করুন।', true);
+                    
+                    // Reset button
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }
             };
             
-            // Handle frame loading error
             frameImg.onerror = function() {
-                // If frame fails to load, proceed without frame
-                alert('ফ্রেম লোড করতে সমস্যা হচ্ছে, ফ্রেম ছাড়া ছবি ডাউনলোড হবে।');
-                
-                // Fill background with white
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, 1080, 1080);
-                
-                // Calculate image position and scale for 1080x1080
-                const containerSize = 1080;
-                const imgWidth = uploadedImage.width * scale;
-                const imgHeight = uploadedImage.height * scale;
-                
-                // Calculate position (centered + user adjustment)
-                const centerX = containerSize / 2 - imgWidth / 2 + (posX * (1080/400));
-                const centerY = containerSize / 2 - imgHeight / 2 + (posY * (1080/400));
-                
-                // Draw user image
-                ctx.drawImage(uploadedImage, centerX, centerY, imgWidth, imgHeight);
-                
-                // Draw a border
-                ctx.strokeStyle = '#1877f2';
-                ctx.lineWidth = 10;
-                ctx.strokeRect(5, 5, 1070, 1070);
-                
-                // Add watermark text
-                ctx.fillStyle = '#1877f2';
-                ctx.font = 'bold 40px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Profile Picture', 540, 80);
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.download = `profile-picture-${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+                try {
+                    // If frame fails to load, proceed without frame
+                    // Fill background with white
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 2048, 2048);
+                    
+                    // Calculate aspect ratios
+                    const canvasAspect = 2048 / 2048;
+                    const imageAspect = originalImageWidth / originalImageHeight;
+                    
+                    let drawWidth, drawHeight, offsetX, offsetY;
+                    
+                    // Calculate dimensions for "cover" effect
+                    if (imageAspect > canvasAspect) {
+                        // Image is wider than canvas
+                        drawHeight = 2048;
+                        drawWidth = originalImageWidth * (2048 / originalImageHeight);
+                    } else {
+                        // Image is taller than canvas
+                        drawWidth = 2048;
+                        drawHeight = originalImageHeight * (2048 / originalImageWidth);
+                    }
+                    
+                    // Apply user's zoom level
+                    drawWidth *= scale;
+                    drawHeight *= scale;
+                    
+                    // Calculate offset to center the image
+                    offsetX = (2048 - drawWidth) / 2;
+                    offsetY = (2048 - drawHeight) / 2;
+                    
+                    // Apply user's position adjustments
+                    const positionScale = 2048 / 400;
+                    offsetX += posX * positionScale;
+                    offsetY += posY * positionScale;
+                    
+                    // Draw the user's image
+                    ctx.drawImage(uploadedImage, offsetX, offsetY, drawWidth, drawHeight);
+                    
+                    // Draw a border
+                    ctx.strokeStyle = '#1877f2';
+                    ctx.lineWidth = 20;
+                    ctx.strokeRect(10, 10, 2028, 2028);
+                    
+                    // Add watermark text
+                    ctx.fillStyle = '#1877f2';
+                    ctx.font = 'bold 80px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Profile Picture', 1024, 160);
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    const timestamp = new Date().getTime();
+                    link.download = `profile-picture-${timestamp}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    
+                    // Trigger the download
+                    const clickEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    link.dispatchEvent(clickEvent);
+                    
+                    // Show success message
+                    showStatus('ছবি ডাউনলোড শুরু হয়েছে (ফ্রেম ছাড়া)! সাইজ: 2048×2048 পিক্সেল');
+                    
+                    // Reset button after a delay
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = originalText;
+                        downloadBtn.disabled = false;
+                    }, 1500);
+                    
+                } catch (error) {
+                    // Show error message
+                    showStatus('ডাউনলোডে সমস্যা হয়েছে! আবার চেষ্টা করুন।', true);
+                    
+                    // Reset button
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                }
             };
             
             frameImg.src = frameImageURL;
@@ -679,7 +853,7 @@
         window.onload = function() {
             // Check if frame loads successfully
             frameOverlay.onerror = function() {
-                alert('ফ্রেম ইমেজ লোড করতে সমস্যা হচ্ছে। আপনার "frame final.png" ফাইলটি HTML ফাইলের同一个 ফোল্ডারে আছে কিনা চেক করুন।');
+                // Silent error handling - don't show alert
                 framePreviewImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2YwZjJmNSIvPjx0ZXh0IHg9Ijc1IiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjODg4YThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GcmFtZSBJbWFnZTwvdGV4dD48dGV4dCB4PSI3NSIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM4ODhhOGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkxvYWQgZmFpbGVkPC90ZXh0Pjwvc3ZnPg==';
             };
         };
