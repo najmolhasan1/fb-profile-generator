@@ -221,6 +221,40 @@
             box-shadow: none;
         }
         
+        .manual-download-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to right, #42b72a, #36a420);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        
+        .manual-download-btn:hover {
+            background: linear-gradient(to right, #36a420, #2c8c1a);
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .manual-download-section {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
         .instructions {
             background-color: white;
             border-radius: 15px;
@@ -364,6 +398,76 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        
+        .manual-download-instruction {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e7f3ff;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #1877f2;
+        }
+        
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .image-preview-content {
+            max-width: 90%;
+            max-height: 90%;
+            text-align: center;
+        }
+        
+        .image-preview-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border: 5px solid white;
+            border-radius: 10px;
+        }
+        
+        .preview-instructions {
+            margin-top: 20px;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+        }
+        
+        .close-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .save-instruction {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(24, 119, 242, 0.8);
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -413,7 +517,7 @@
                             <i class="fas fa-search-minus"></i> জুম আউট
                         </button>
                         <button id="resetZoomBtn" class="control-btn" title="Reset Zoom">
-                            <i class="fas fa-redo"></i>
+                            <i class="fas fa-redo"></i> রিসেট
                         </button>
                     </div>
                     <div class="control-group">
@@ -449,6 +553,29 @@
             </div>
         </div>
         
+        <!-- Image Preview Modal -->
+        <div id="imagePreviewModal" class="image-preview-modal">
+            <div class="close-preview" id="closePreview">&times;</div>
+            <div class="image-preview-content">
+                <img id="fullPreviewImage" src="" alt="Full Preview">
+                <div class="preview-instructions">
+                    <h3 style="color: white;">ছবিটি ডাউনলোড করুন</h3>
+                    <div class="save-instruction" id="saveInstructionMobile">
+                        <i class="fas fa-mobile-alt"></i> মোবাইলে: ছবিতে লং প্রেস করুন > "Save Image" অথবা "Download Image" সিলেক্ট করুন
+                    </div>
+                    <div class="save-instruction" id="saveInstructionDesktop" style="display: none;">
+                        <i class="fas fa-desktop"></i> ডেস্কটপে: ছবিতে রাইট ক্লিক করুন > "Save Image As" সিলেক্ট করুন
+                    </div>
+                    <p style="margin-top: 15px; font-size: 0.9rem;">
+                        ছবি সাইজ: 2048×2048 পিক্সেল | ফরম্যাট: PNG
+                    </p>
+                    <button id="tryAutoDownload" class="manual-download-btn" style="margin-top: 15px;">
+                        <i class="fas fa-redo"></i> আবার চেষ্টা করুন
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <div class="instructions">
             <h3>কিভাবে ব্যবহার করবেন</h3>
             <div class="steps">
@@ -470,7 +597,7 @@
                 <div class="step">
                     <i class="fas fa-download"></i>
                     <h4>৪. ডাউনলোড করুন</h4>
-                    <p>HD সাইজে সম্পূর্ণ কভার করে ডাউনলোড করুন</p>
+                    <p>2048x2048 HD সাইজে সম্পূর্ণ কভার করে ডাউনলোড করুন</p>
                 </div>
             </div>
         </div>
@@ -495,6 +622,14 @@
         const downloadStatus = document.getElementById('downloadStatus');
         const statusMessage = document.getElementById('statusMessage');
         
+        // Modal elements
+        const imagePreviewModal = document.getElementById('imagePreviewModal');
+        const fullPreviewImage = document.getElementById('fullPreviewImage');
+        const closePreview = document.getElementById('closePreview');
+        const tryAutoDownload = document.getElementById('tryAutoDownload');
+        const saveInstructionMobile = document.getElementById('saveInstructionMobile');
+        const saveInstructionDesktop = document.getElementById('saveInstructionDesktop');
+        
         // Control buttons
         const zoomInBtn = document.getElementById('zoomInBtn');
         const zoomOutBtn = document.getElementById('zoomOutBtn');
@@ -516,6 +651,12 @@
         // Store original image dimensions
         let originalImageWidth = 0;
         let originalImageHeight = 0;
+        
+        // Store generated image data URL
+        let generatedImageDataURL = null;
+        
+        // Check if mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // Load the frame image
         frameOverlay.src = frameImageURL;
@@ -594,7 +735,21 @@
         });
         
         // Download button
-        downloadBtn.addEventListener('click', downloadProfilePicture);
+        downloadBtn.addEventListener('click', processDownload);
+        
+        // Modal events
+        closePreview.addEventListener('click', () => {
+            imagePreviewModal.style.display = 'none';
+        });
+        
+        tryAutoDownload.addEventListener('click', attemptAutoDownload);
+        
+        // Close modal when clicking outside
+        imagePreviewModal.addEventListener('click', (e) => {
+            if (e.target === imagePreviewModal) {
+                imagePreviewModal.style.display = 'none';
+            }
+        });
         
         // Functions
         function handleImageUpload(file) {
@@ -665,13 +820,11 @@
             }, 3000);
         }
         
-        function downloadProfilePicture() {
-            if (!uploadedImage) return;
-            
-            // Show loading state
-            const originalText = downloadBtn.innerHTML;
-            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> প্রস্তুত হচ্ছে...';
-            downloadBtn.disabled = true;
+        function generateProfilePicture(callback) {
+            if (!uploadedImage) {
+                callback(null);
+                return;
+            }
             
             // Create a canvas element with 2048x2048 size
             const canvas = document.createElement('canvas');
@@ -725,41 +878,13 @@
                     // Draw frame overlay on top
                     ctx.drawImage(frameImg, 0, 0, 2048, 2048);
                     
-                    // Create download link
-                    const link = document.createElement('a');
-                    const timestamp = new Date().getTime();
-                    link.download = `profile-picture-${timestamp}.png`;
-                    
-                    // Convert canvas to data URL
+                    // Generate data URL
                     const dataURL = canvas.toDataURL('image/png');
-                    link.href = dataURL;
-                    
-                    // Create a click event and trigger it
-                    const clickEvent = new MouseEvent('click', {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true
-                    });
-                    
-                    // Trigger the download
-                    link.dispatchEvent(clickEvent);
-                    
-                    // Show success message without console
-                    showStatus('ছবি ডাউনলোড হচ্ছে!');
-                    
-                    // Reset button after a delay
-                    setTimeout(() => {
-                        downloadBtn.innerHTML = originalText;
-                        downloadBtn.disabled = false;
-                    }, 1500);
+                    callback(dataURL);
                     
                 } catch (error) {
-                    // Show error message
-                    showStatus('ডাউনলোডে সমস্যা হয়েছে! আবার চেষ্টা করুন।', true);
-                    
-                    // Reset button
-                    downloadBtn.innerHTML = originalText;
-                    downloadBtn.disabled = false;
+                    console.error('Error generating image:', error);
+                    callback(null);
                 }
             };
             
@@ -814,51 +939,132 @@
                     ctx.textAlign = 'center';
                     ctx.fillText('Profile Picture', 1024, 160);
                     
-                    // Create download link
-                    const link = document.createElement('a');
-                    const timestamp = new Date().getTime();
-                    link.download = `profile-picture-${timestamp}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    
-                    // Trigger the download
-                    const clickEvent = new MouseEvent('click', {
-                        view: window,
-                        bubbles: true,
-                        cancelable: true
-                    });
-                    link.dispatchEvent(clickEvent);
-                    
-                    // Show success message
-                    showStatus('ছবি ডাউনলোড শুরু হয়েছে (ফ্রেম ছাড়া)! সাইজ: 2048×2048 পিক্সেল');
-                    
-                    // Reset button after a delay
-                    setTimeout(() => {
-                        downloadBtn.innerHTML = originalText;
-                        downloadBtn.disabled = false;
-                    }, 1500);
+                    // Generate data URL
+                    const dataURL = canvas.toDataURL('image/png');
+                    callback(dataURL);
                     
                 } catch (error) {
-                    // Show error message
-                    showStatus('ডাউনলোডে সমস্যা হয়েছে! আবার চেষ্টা করুন।', true);
-                    
-                    // Reset button
-                    downloadBtn.innerHTML = originalText;
-                    downloadBtn.disabled = false;
+                    console.error('Error generating image without frame:', error);
+                    callback(null);
                 }
             };
             
             frameImg.src = frameImageURL;
         }
         
+        function processDownload() {
+            if (!uploadedImage) return;
+            
+            // Show loading state
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ছবি তৈরি হচ্ছে...';
+            downloadBtn.disabled = true;
+            
+            // Generate the profile picture
+            generateProfilePicture(function(dataURL) {
+                if (!dataURL) {
+                    // Show error message
+                    showStatus('ছবি তৈরি করতে সমস্যা হয়েছে! আবার চেষ্টা করুন।', true);
+                    
+                    // Reset button
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.disabled = false;
+                    return;
+                }
+                
+                // Store the generated image data URL
+                generatedImageDataURL = dataURL;
+                
+                // Try automatic download first
+                attemptAutoDownload();
+                
+                // Reset button
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            });
+        }
+        
+        function attemptAutoDownload() {
+            if (!generatedImageDataURL) {
+                showStatus('প্রথমে ছবি তৈরি করুন', true);
+                return;
+            }
+            
+            // Try to auto download
+            try {
+                // Create download link
+                const link = document.createElement('a');
+                const timestamp = new Date().getTime();
+                link.download = `profile-picture-${timestamp}.png`;
+                link.href = generatedImageDataURL;
+                
+                // Create and trigger click event
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                // Trigger the download
+                document.body.appendChild(link);
+                link.dispatchEvent(clickEvent);
+                document.body.removeChild(link);
+                
+                // Check if download started (in mobile browsers, this often fails silently)
+                setTimeout(() => {
+                    // If we're still here and modal isn't showing, assume download failed
+                    if (imagePreviewModal.style.display === 'none') {
+                        // Show manual download modal
+                        showImagePreview();
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                // Auto download failed - show manual preview
+                showImagePreview();
+            }
+        }
+        
+        function showImagePreview() {
+            if (!generatedImageDataURL) return;
+            
+            // Show appropriate instructions based on device
+            if (isMobile) {
+                saveInstructionMobile.style.display = 'block';
+                saveInstructionDesktop.style.display = 'none';
+            } else {
+                saveInstructionMobile.style.display = 'none';
+                saveInstructionDesktop.style.display = 'block';
+            }
+            
+            // Set the image in the modal
+            fullPreviewImage.src = generatedImageDataURL;
+            
+            // Show the modal
+            imagePreviewModal.style.display = 'flex';
+            
+            // Show status message
+            showStatus('ছবি তৈরি সম্পন্ন! ছবিটি প্রিভিউ করুন ও ডাউনলোড করুন');
+        }
+        
         // Initialize with frame loading
         window.onload = function() {
             // Check if frame loads successfully
             frameOverlay.onerror = function() {
-                // Silent error handling - don't show alert
-                framePreviewImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2YwZjJmNSIvPjx0ZXh0IHg9Ijc1IiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjODg4YThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GcmFtZSBJbWFnZTwvdGV4dD48dGV4dCB4PSI3NSIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM4ODhhOGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkxvYWQgZmFpbGVkPC90ZXh0Pjwvc3ZnPg==';
+                // Silent error handling
+                framePreviewImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2YwZjJmNSIvPjx0ZXh0IHg9Ijc1IiB5PSI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjODg4YThkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5GcmFtZSBJbWFnZTwvdGV4dD48dGV4dCB4PSIjc1IiB5PSIxMDAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzg4OGE4ZCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TG9hZCBmYWlsZWQ8L3RleHQ+PC9zdmc+';
             };
+            
+            // Detect if in Messenger browser
+            const isMessenger = navigator.userAgent.includes('FBAN') || 
+                               navigator.userAgent.includes('FBAV') ||
+                               navigator.userAgent.includes('Messenger');
+            
+            if (isMessenger) {
+                // Update download button text for Messenger
+                downloadBtn.innerHTML = '<i class="fas fa-image"></i>ছবি তৈরি করুন ও দেখুন';
+            }
         };
     </script>
 </body>
 </html>
-
